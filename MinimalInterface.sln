@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.87
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalInterface", "MinimalInterface\MinimalInterface\MinimalInterface.csproj", "{AE026DBC-2AF7-4376-8BA4-22155966D2AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalInterface.Vsix", "MinimalInterface\MinimalInterface.Vsix\MinimalInterface.Vsix.csproj", "{065FAAF1-AA5B-424D-9BBD-7E297EE2664B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AE026DBC-2AF7-4376-8BA4-22155966D2AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE026DBC-2AF7-4376-8BA4-22155966D2AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE026DBC-2AF7-4376-8BA4-22155966D2AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE026DBC-2AF7-4376-8BA4-22155966D2AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{065FAAF1-AA5B-424D-9BBD-7E297EE2664B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{065FAAF1-AA5B-424D-9BBD-7E297EE2664B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{065FAAF1-AA5B-424D-9BBD-7E297EE2664B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{065FAAF1-AA5B-424D-9BBD-7E297EE2664B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D93891A3-A821-4887-8DF0-9514C6276A41}
+	EndGlobalSection
+EndGlobal
