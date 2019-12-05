@@ -169,7 +169,7 @@ namespace MinimalInterface
                                 met.ToString().ToLowerInvariant().EndsWith(".set")
                                 )
                                 asString = "";
-                            else if (met.ExplicitInterfaceImplementations.Any())
+                            else if (met.ExplicitInterfaceImplementations.Any() || met.Name == "GetEnumerator")
                             {
                                 asString = $"// dropped for interface : {met.ReturnType}; // IMethodSymbol used {count} times";
                             }
