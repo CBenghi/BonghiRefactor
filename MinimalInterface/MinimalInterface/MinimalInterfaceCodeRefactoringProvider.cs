@@ -65,10 +65,14 @@ namespace MinimalInterface
         {
             string code = "";
             var compilation = context.Document.Project.GetCompilationAsync().Result;
-            var m2 = assembly.GlobalNamespace.GetMembers();
-            foreach (var item in m2)
+
+            Queue<INamespaceSymbol> symbols = new Queue<INamespaceSymbol>();
+            symbols.Enqueue(assembly.GlobalNamespace);
+
+            while (symbols.Any())
             {
-                foreach (var item2 in item.GetMembers())
+                var curr = symbols.Dequeue();
+                foreach (var item2 in curr.GetMembers())
                 {
                     if (item2.Kind == SymbolKind.NamedType)
                     {
@@ -76,33 +80,50 @@ namespace MinimalInterface
                         var sb = PrepareInterfaceText(context, fNname, compilation);
                         code += sb.ToString() + "\r\n";
                     }
+                    else if (item2.Kind == SymbolKind.Namespace)
+                    {
+                        var ns = item2 as INamespaceSymbol;
+                        if (ns!=null)
+                            symbols.Enqueue(ns);
+                    }
                 }
             }
+       
             if (code != "")
             {
-                if (context.Document.Project.Documents.Any(x => x.Name == "ExtractedInterface.cs"))
-                {
-                    var doc = context.Document.Project.Documents.FirstOrDefault(x => x.Name == "ExtractedInterface.cs");
-                    var p2 = context.Document.Project.RemoveDocument(doc.Id);
-                    var newDoc = p2.AddAdditionalDocument("ExtractedInterface.cs", code);
-                    return newDoc.Project.Solution;
-                }
-                else
-                {
-                    var newDoc = context.Document.Project.AddAdditionalDocument("ExtractedInterface.cs", code);
-                    return newDoc.Project.Solution;
-                }
+                return CreateInterface(context, code);
             }
             return context.Document.Project.Solution;
         }
 
+        private static Solution CreateInterface(CodeRefactoringContext context, string code)
+        {
+            if (context.Document.Project.Documents.Any(x => x.Name == "ExtractedInterface.cs"))
+            {
+                var doc = context.Document.Project.Documents.FirstOrDefault(x => x.Name == "ExtractedInterface.cs");
+                var p2 = context.Document.Project.RemoveDocument(doc.Id);
+                var newDoc = p2.AddAdditionalDocument("ExtractedInterface.cs", code);
+                return newDoc.Project.Solution;
+            }
+            else
+            {
+                var newDoc = context.Document.Project.AddAdditionalDocument("ExtractedInterface.cs", code);
+                return newDoc.Project.Solution;
+            }
+        }
 
         private async Task<Solution> CreateUsagesInterfaceAsync(CodeRefactoringContext context, ISymbol symbol, CancellationToken cancellationToken)
         {
             var originalSolution = context.Document.Project.Solution;
             var qualifiedClassName = $"{symbol.ContainingNamespace}.{symbol.Name}";
             var compilation = context.Document.Project.GetCompilationAsync().Result;
-            PrepareInterfaceText(context, qualifiedClassName, compilation);
+            string code = "";
+            var sb = PrepareInterfaceText(context, qualifiedClassName, compilation);
+            code = sb.ToString();
+            if (code != "")
+            {
+                return CreateInterface(context, code);
+            }
             return originalSolution;
         }
 
@@ -111,11 +132,9 @@ namespace MinimalInterface
             StringBuilder sb = new System.Text.StringBuilder();
             sb.AppendLine($"// {qualifiedClassName} in {context.Document.Project.Name}");
 
-            
-
-            
             var classRef = compilation.GetTypeByMetadataName(qualifiedClassName);
             // classRef = compilation.GetTypeByMetadataName(symbol);
+            var AnyMember = false;
             
             if (classRef != null)
             {
@@ -132,6 +151,7 @@ namespace MinimalInterface
                     var count = projLocs.Count();
                     if (projLocs.Any())
                     {
+                        AnyMember = true;
                         asString = $"{methodToSearchFor.ToString()} // standard";
                         if (methodToSearchFor is IMethodSymbol met)
                         {
@@ -160,7 +180,10 @@ namespace MinimalInterface
                         else if (methodToSearchFor is IEventSymbol eventSymbol)
                         {
                             // eventSymbol
-                            asString = $"{eventSymbol.Type} {eventSymbol.ToString()} // IEventSymbol";
+                            var tp = eventSymbol.Type;
+                            var fType = tp.ContainingNamespace + "." + eventSymbol.Name;
+
+                            asString = $"event {fType} {eventSymbol.ToString()} // IEventSymbol";
                         }
                         else if (methodToSearchFor is IPropertySymbol propSymbol)
                         {
@@ -205,9 +228,15 @@ namespace MinimalInterface
                     if (!string.IsNullOrEmpty(asString))
                         sb.AppendLine($"{asString};");
                 }
+                sb.AppendLine("}");
+                sb.AppendLine("}");
             }
-            sb.AppendLine("}");
-            sb.AppendLine("}");
+            if (!AnyMember)
+            {
+                sb = new System.Text.StringBuilder();
+                sb.AppendLine($"// {qualifiedClassName} in {context.Document.Project.Name}");
+            }
+            
             return sb;
         }
 
