@@ -138,8 +138,14 @@ namespace MinimalInterface
             
             if (classRef != null)
             {
+                var ints = classRef.Interfaces.Select(x => x.ToString());
+                var interfaceDec = "";
+                if (ints.Any())
+                {
+                    interfaceDec = ": " + string.Join(", ", ints.ToArray());
+                }
                 sb.AppendLine($"namespace {classRef.ContainingNamespace} {{");
-                sb.AppendLine($"interface {classRef.Name}_ExtractedInterface");
+                sb.AppendLine($"interface {classRef.Name}_ExtractedInterface {interfaceDec}");
                 sb.AppendLine("{");
                 var methodsToSearchFor = classRef.GetMembers();
                 foreach (var methodToSearchFor in methodsToSearchFor)
@@ -151,6 +157,7 @@ namespace MinimalInterface
                     var count = projLocs.Count();
                     if (projLocs.Any())
                     {
+                        var repCname = true;
                         AnyMember = true;
                         asString = $"{methodToSearchFor.ToString()} // standard";
                         if (methodToSearchFor is IMethodSymbol met)
@@ -162,6 +169,10 @@ namespace MinimalInterface
                                 met.ToString().ToLowerInvariant().EndsWith(".set")
                                 )
                                 asString = "";
+                            else if (met.ExplicitInterfaceImplementations.Any())
+                            {
+                                asString = $"// dropped for interface : {met.ReturnType}; // IMethodSymbol used {count} times";
+                            }
                             else
                             {
                                 var orig = met.ToString();
@@ -181,9 +192,13 @@ namespace MinimalInterface
                         {
                             // eventSymbol
                             var tp = eventSymbol.Type;
-                            var fType = tp.ContainingNamespace + "." + eventSymbol.Name;
-
-                            asString = $"event {fType} {eventSymbol.ToString()} // IEventSymbol";
+                            var fType = tp.ContainingNamespace + "." + tp.Name;
+                            var outv = eventSymbol.ToDisplayString();
+                            var ov = tp.ToString();
+                            var evt = eventSymbol.ToString();
+                            evt = evt.Replace(qualifiedClassName + ".", "");
+                            asString = $"event {ov} {evt}; // IEventSymbol";
+                            repCname = false;
                         }
                         else if (methodToSearchFor is IPropertySymbol propSymbol)
                         {
@@ -210,7 +225,7 @@ namespace MinimalInterface
                             }
                             else
                             {
-                                asString = $"enum {namedTypeSymbol.ToString()} //INamedTypeSymbol used {count} times";
+                                asString = $"// todo: enum {namedTypeSymbol.ToString()}; //INamedTypeSymbol used {count} times";
                             }
                             // fieldSymbol.acc
                         }
@@ -223,7 +238,8 @@ namespace MinimalInterface
                                 asString += $"\r\n// loc: {projLoc.Location.SourceSpan} line: {sp.StartLinePosition.Line + 1}, {sp.StartLinePosition.Character + 1}";
                             }
                         }
-                        asString = asString.Replace(qualifiedClassName + ".", "");
+                        if (repCname)
+                            asString = asString.Replace(qualifiedClassName + ".", "");
                     }
                     if (!string.IsNullOrEmpty(asString))
                         sb.AppendLine($"{asString};");
