@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.87
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibToRefactor", "LibToRefactor\LibToRefactor.csproj", "{8633D3E4-463A-4C72-BC58-3D1589C55E72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsuminApp", "ConsuminApp\ConsuminApp.csproj", "{BDF115DC-BFA8-4F95-9723-55F01CAF8DF8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8633D3E4-463A-4C72-BC58-3D1589C55E72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8633D3E4-463A-4C72-BC58-3D1589C55E72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8633D3E4-463A-4C72-BC58-3D1589C55E72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8633D3E4-463A-4C72-BC58-3D1589C55E72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDF115DC-BFA8-4F95-9723-55F01CAF8DF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDF115DC-BFA8-4F95-9723-55F01CAF8DF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDF115DC-BFA8-4F95-9723-55F01CAF8DF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDF115DC-BFA8-4F95-9723-55F01CAF8DF8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3E764584-308A-410D-A1ED-3EE799BD0722}
+	EndGlobalSection
+EndGlobal

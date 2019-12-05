@@ -4,6 +4,7 @@ using System.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -79,8 +80,18 @@ namespace MinimalInterface
             }
             if (code != "")
             {
-                var newDoc = context.Document.Project.AddAdditionalDocument("ExtractedInterface.cs", code);
-                return newDoc.Project.Solution;
+                if (context.Document.Project.Documents.Any(x => x.Name == "ExtractedInterface.cs"))
+                {
+                    var doc = context.Document.Project.Documents.FirstOrDefault(x => x.Name == "ExtractedInterface.cs");
+                    var p2 = context.Document.Project.RemoveDocument(doc.Id);
+                    var newDoc = p2.AddAdditionalDocument("ExtractedInterface.cs", code);
+                    return newDoc.Project.Solution;
+                }
+                else
+                {
+                    var newDoc = context.Document.Project.AddAdditionalDocument("ExtractedInterface.cs", code);
+                    return newDoc.Project.Solution;
+                }
             }
             return context.Document.Project.Solution;
         }
@@ -109,7 +120,7 @@ namespace MinimalInterface
             if (classRef != null)
             {
                 sb.AppendLine($"namespace {classRef.ContainingNamespace} {{");
-                sb.AppendLine($"interface {classRef.Name}ExtractedInterface");
+                sb.AppendLine($"interface {classRef.Name}_ExtractedInterface");
                 sb.AppendLine("{");
                 var methodsToSearchFor = classRef.GetMembers();
                 foreach (var methodToSearchFor in methodsToSearchFor)
@@ -118,11 +129,13 @@ namespace MinimalInterface
                     var references = SymbolFinder.FindReferencesAsync(methodToSearchFor, context.Document.Project.Solution).Result;
                     var projReferences = references.Where(x => x.Locations.Any(loc => loc.Document.Project == context.Document.Project));
                     var projLocs = projReferences.SelectMany(x => x.Locations.Where(loc => loc.Document.Project == context.Document.Project));
+                    var count = projLocs.Count();
                     if (projLocs.Any())
                     {
                         asString = $"{methodToSearchFor.ToString()} // standard";
                         if (methodToSearchFor is IMethodSymbol met)
                         {
+                            // drop property accessors.
                             if (
                                 met.ToString().ToLowerInvariant().EndsWith(".get")
                                 ||
@@ -131,11 +144,17 @@ namespace MinimalInterface
                                 asString = "";
                             else
                             {
+                                var orig = met.ToString();
+                                var parTypesString = Regex.Match(orig, @"\(.*\)$", RegexOptions.IgnoreCase, Regex.InfiniteMatchTimeout).Value;
+                                var parTypesList = parTypesString.Split(new[] { ',' }).ToList();
                                 
-                                var jnd = met.Parameters.Select(x=>x.Name).ToArray();
-                                var j2 = string.Join(",", jnd);
+                                
 
-                                asString = $"{met.ReturnType} {met.ToString()}; // {j2} IMethodSymbol";
+                                var newParArr = "(" + string.Join(", ", met.Parameters.Select(x => $"{x.Type} {x.Name}").ToArray()) + ")";
+                                var newS = orig.Replace(parTypesString, newParArr);
+
+
+                                asString = $"{met.ReturnType} {newS}; // IMethodSymbol used {count} times";
                             }
                         }
                         else if (methodToSearchFor is IEventSymbol eventSymbol)
@@ -145,18 +164,18 @@ namespace MinimalInterface
                         }
                         else if (methodToSearchFor is IPropertySymbol propSymbol)
                         {
-                            asString = propSymbol.Type + " " + propSymbol.ToString() + " {get; set;} // IPropertySymbol";
+                            asString = $"{propSymbol.Type} {propSymbol.ToString()} {{get; set;}} // IPropertySymbol used {count} times";
                         }
                         else if (methodToSearchFor is IFieldSymbol fieldSymbol)
                         {
                             // eventSymbol
                             if (fieldSymbol.DeclaredAccessibility != Accessibility.Public)
                             {
-                                asString = $"// skipped non public {fieldSymbol.Type} {fieldSymbol.ToString()} //IFieldSymbol";
+                                asString = $"";
                             }
                             else
                             {
-                                asString = $"{fieldSymbol.Type} {fieldSymbol.ToString()}; //IFieldSymbol";
+                                asString = $"{fieldSymbol.Type} {fieldSymbol.ToString()} {{get; set;}}  //IFieldSymbol converted to Property in interface, used {count} times";
                             }
                         }
                         else if (methodToSearchFor is INamedTypeSymbol namedTypeSymbol)
@@ -164,11 +183,11 @@ namespace MinimalInterface
                             // eventSymbol
                             if (namedTypeSymbol.DeclaredAccessibility != Accessibility.Public)
                             {
-                                asString = $"// skipped non public enum {namedTypeSymbol.ToString()} //INamedTypeSymbol";
+                                asString = $"";
                             }
                             else
                             {
-                                asString = $"enum {namedTypeSymbol.ToString()} //INamedTypeSymbol";
+                                asString = $"enum {namedTypeSymbol.ToString()} //INamedTypeSymbol used {count} times";
                             }
                             // fieldSymbol.acc
                         }
@@ -187,7 +206,8 @@ namespace MinimalInterface
                         sb.AppendLine($"{asString};");
                 }
             }
-            sb.AppendLine("}}");
+            sb.AppendLine("}");
+            sb.AppendLine("}");
             return sb;
         }
 
